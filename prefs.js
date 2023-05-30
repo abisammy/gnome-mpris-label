@@ -64,26 +64,9 @@ function buildPrefsWidget(){
 	addSpinButton(labelPage,'max-string-length','Max string length (each field):',1,150,undefined);
 	addEntry(labelPage,'button-placeholder','Button placeholder (can be left empty):',"The button placeholder is a hint for the user\nAppears when the label is empty and another available source is active");
 
-	//visible fields is a bit more complex
-	let visibleFieldsBox = new Gtk.Box({
-		spacing: 6,
-		visible: true
-	});
 
-	addEntry(labelPage, 'format', 'Format for the extension:', undefined);
-    addLabel(
-        labelPage,
-        '%ARTIST% - Artist\n%ALBUM% - Album\n%TITLE% - Title',
-        undefined
-    );
+	addEntry(labelPage, 'format', 'Format for the extension:', '%ARTIST% - Artist\n%ALBUM% - Album\n%TITLE% - Title');
 
-
-	visibleFieldsBox.margin_start = 30; //include margin on left to align with rest of widgets
-	labelPage.attach(visibleFieldsBox,1,position,1,1);
-	position++;
-
-	addSwitch(labelPage,'use-album','Use album art when available:',undefined);
-	addSpinButton(labelPage,'album-size','Album size:',40,100,'Album size as a %');
 
 	let showIconComboBox = addStringComboBox(labelPage,'show-icon','Show source icon:',{'off':'','left':'left','right':'right'},undefined);
 
