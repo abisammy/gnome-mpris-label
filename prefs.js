@@ -67,6 +67,9 @@ function buildPrefsWidget(){
 
 	addEntry(labelPage, 'format', 'Format for the extension:', '%ARTIST% - Artist\n%ALBUM% - Album\n%TITLE% - Title');
 
+	addSwitch(labelPage,'use-album','Use album art when available:',undefined);
+	addSpinButton(labelPage,'album-size','Album size:',40,100,'Album size as a %');
+
 
 	let showIconComboBox = addStringComboBox(labelPage,'show-icon','Show source icon:',{'off':'','left':'left','right':'right'},undefined);
 
