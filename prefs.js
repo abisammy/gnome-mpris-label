@@ -65,7 +65,7 @@ function buildPrefsWidget(){
 	addEntry(labelPage,'button-placeholder','Button placeholder (can be left empty):',"The button placeholder is a hint for the user\nAppears when the label is empty and another available source is active");
 
 
-	addEntry(labelPage, 'format', 'Format for the extension:', '%ARTIST% - Artist\n%ALBUM% - Album\n%TITLE% - Title');
+	addEntry(labelPage, 'format', 'Format for the extension:', '%ARTIST% - Artist\n%ALBUM% - Album\n%TITLE% - Title',140);
 
 	let showIconComboBox = addStringComboBox(labelPage,'show-icon','Show source icon:',{'off':'','left':'left','right':'right'},undefined);
 	
@@ -276,11 +276,12 @@ function addSwitch(widget,setting,labelstring,labeltooltip){
 	return thisSwitch
 }
 
-function addEntry(widget,setting,labelstring,labeltooltip){
+function addEntry(widget,setting,labelstring,labeltooltip,max){
 	addLabel(widget,labelstring,labeltooltip);
 	let thisEntry = new Gtk.Entry({
 		visible: true
 	});
+	if(max) thisEntry.set_max_length(max)
 	widget.attach(thisEntry,1,position,1,1);
 	widget._settings.bind(setting,thisEntry,'text',Gio.SettingsBindFlags.DEFAULT);
 	position++;
