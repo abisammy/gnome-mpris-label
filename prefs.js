@@ -260,7 +260,7 @@ function addSwitch(widget,setting,labelstring,labeltooltip){
 	return thisSwitch
 }
 
-function addEntry(widget,setting,labelstring,labeltooltip){
+function addEntry(widget,setting,labelstring,labeltooltip,max){
 	let col = 1
 	if(labelstring) addLabel(widget,labelstring,labeltooltip);
 	else col = 0
@@ -268,7 +268,7 @@ function addEntry(widget,setting,labelstring,labeltooltip){
 		visible: true
 	});
 	if(max) thisEntry.set_max_length(max)
-	widget.attach(thisEntry,1,position,1,1);
+	widget.attach(thisEntry,col,position,1,1);
 	widget._settings.bind(setting,thisEntry,'text',Gio.SettingsBindFlags.DEFAULT);
 	position++;
 	return thisEntry
