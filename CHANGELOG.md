@@ -43,4 +43,3 @@ Aditionally:
 
 # Version 16
 - Add album art
-- Change settings for label to add format, allowing for infinite customization
