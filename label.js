@@ -3,8 +3,7 @@ const CurrentExtension = ExtensionUtils.getCurrentExtension();
 
 let MAX_STRING_LENGTH,BUTTON_PLACEHOLDER,REMOVE_REMASTER_TEXT,
 	DIVIDER_STRING,REMOVE_TEXT_WHEN_PAUSED,
-	REMOVE_TEXT_PAUSED_DELAY, FORMAT
-	MAX_STRING_LENGTH;
+	REMOVE_TEXT_PAUSED_DELAY, LABEL_FORMAT
 
 function getSettings(){
 	const settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.mpris-label');
@@ -14,7 +13,7 @@ function getSettings(){
 	REMOVE_REMASTER_TEXT = settings.get_boolean('remove-remaster-text');
 	REMOVE_TEXT_WHEN_PAUSED = settings.get_boolean('remove-text-when-paused');
 	REMOVE_TEXT_PAUSED_DELAY = settings.get_int('remove-text-paused-delay');
-	FORMAT = settings.get_string("format");
+	LABEL_FORMAT = settings.get_string("label-format");
 }
 
 var buildLabel = function buildLabel(players){
@@ -37,36 +36,49 @@ var buildLabel = function buildLabel(players){
 	if(metadata == null)
 		return placeholder
 
+	const substitutions = new Map();
+	substitutions.set("ARTIST", parseMetadataField(stringFromMetadata("xesam:artist",metadata)));
+	substitutions.set("ALBUM", parseMetadataField(stringFromMetadata("xesam:album",metadata)));
+	substitutions.set("TITLE", parseMetadataField(stringFromMetadata("xesam:title",metadata)));
+	substitutions.set("IDENTITY", players.selected.identity);
+	substitutions.set("STATUS", players.selected.playbackStatus);
 
-	const substitutions = [ 	// [value to replace, value in metadata]
-        ["artist", "xesam:artist"],
-        ["album", "xesam:album"],
-        ["title", "xesam:title"],
-    ];
+	let labelString = LABEL_FORMAT;
 
-	let labelString = FORMAT;
-	let hasSubstitutions = false; // if no substitutions, render placeholder
-	let hasEmptySubstitutions = true; // if all substitutions are empty, render placeholder
+	substitutions.forEach( (value,key) => labelString = labelString.replaceAll(`%${key}%`,value));
 
-	substitutions.forEach((value) => {
-		let fieldString = stringFromMetadata(value[1], metadata); //"extract" the string from metadata
-		fieldString = parseMetadataField(fieldString);
+	// FORMAT: {{string}}{{replacement vales}}
+	// Regex allows for escape characters: \{ and \}
+	const setRegex = /(\{\{.{1,}?\}\}){2}/g
+	
+	// Find sets in string
+	const sets = labelString.match(setRegex)
+	if(sets)
+		sets.forEach((substring)=>{
+			// Keep original for later, and split the set
+			const original = substring
+			substring = substring.slice(2,-2).split("}}{{")
+			
+			// Find the substitution keys, and replace them in the string
+			let substitutionKeys = substring[1].split(/\|/g)
+			for(let i = 0; i < substitutionKeys.length; i++){
+				const substitution = substitutions.get(substitutionKeys[i])
+				if(substitution && substitution.length > 0){
+					substring[0] = substring[0].replace('VALUE',substitution)
+					break;
+				// Special case, empty string if no value is found
+				} else if (i==substitutionKeys.length-1){
+					substring[0] = ''
+					break;
+				}
+			}
+			labelString = labelString.replace(original, substring[0])
+		})
 
-		const regex = new RegExp(`%${value[0].toUpperCase()}%`, "g"); //generate regex for value
-		
-		// test if there any substitutions
-		if(regex.test(labelString)){
-			// if there are replace them
-			labelString = labelString.replace(regex, fieldString)
-			hasSubstitutions = true
-			if(fieldString.length != 0) hasEmptySubstitutions = false
-		}
-	});
-
-	if(!hasSubstitutions || hasEmptySubstitutions) 
+	if (labelString.length === 0)
 		return placeholder
 
-	return labelString
+	return labelString.replaceAll('\\{','{').replaceAll('\\}','}')
 }
 
 function removeTextWhenPaused(player){

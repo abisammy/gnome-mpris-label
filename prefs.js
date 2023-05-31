@@ -63,10 +63,7 @@ function buildPrefsWidget(){
 	addSubcategoryLabel(labelPage,'Appearance');
 	addSpinButton(labelPage,'max-string-length','Max string length (each field):',1,150,undefined);
 	addEntry(labelPage,'button-placeholder','Button placeholder (can be left empty):',"The button placeholder is a hint for the user\nAppears when the label is empty and another available source is active");
-
-
-	addEntry(labelPage, 'format', 'Format for the extension:', '%ARTIST% - Artist\n%ALBUM% - Album\n%TITLE% - Title',140);
-
+	addEntry(labelPage, 'label-format', 'Format for the label:', 'Substitutions available:\n\t%ARTIST%: Artist\n\t%ALBUM%: Album\n\t%TITLE%: Title\n\t%IDENTITY%: Reported name of the selected player\n\t%STATUS%: Reported status of the selected player (paused,stopped,playing,etc)');
 	let showIconComboBox = addStringComboBox(labelPage,'show-icon','Show source icon:',{'off':'','left':'left','right':'right'},undefined);
 	
 	let albumSwitch = addSwitch(labelPage,'use-album','Use album art as icon when available:',undefined);
@@ -93,10 +90,7 @@ function buildPrefsWidget(){
 		settings.reset('refresh-rate');
 		settings.reset('button-placeholder');
 		settings.reset('remove-remaster-text');
-		settings.reset('divider-string');
-		settings.reset('first-field');
-		settings.reset('second-field');
-		settings.reset('last-field');
+		settings.reset('label-format');
 		settings.reset('remove-text-when-paused');
 		settings.reset('remove-text-paused-delay');
 		settings.reset('auto-switch-to-most-recent');
