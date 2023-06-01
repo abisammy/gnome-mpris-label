@@ -67,7 +67,7 @@ function buildPrefsWidget(){
 	let showIconComboBox = addStringComboBox(labelPage,'show-icon','Show source icon:',{'off':'','left':'left','right':'right'},undefined);
 	
 	let albumSwitch = addSwitch(labelPage,'use-album','Use album art as icon when available:',undefined);
-	let albumScale = addScale(labelPage, 'album-size', 'Album size:',50,250,[50,75,100,150,200,250],'%',undefined);
+	let albumScale = addScale(labelPage, 'album-size', 'Album size:',50,250,[50,100,150,200,250],'%',undefined);
 	
 	const disableScaleIconComboBox = () => {
 		const isActive = showIconComboBox.get_active_text() !== 'off';
@@ -128,10 +128,10 @@ function buildPrefsWidget(){
 	addSubcategoryLabel(filtersPage,'Allow list:');
 	addEntry(filtersPage,'mpris-sources-whitelist',undefined,undefined).set_placeholder_text('Separate entries with commas');
 	
-	addSwitch(filtersPage,'use-whitelisted-sources-only','Ignore all sources except allowed ones:','Separate entries with commas')
+	addSwitch(filtersPage,'use-whitelisted-sources-only','Ignore all sources except allowed ones:','Separate entries with commas',0)
 	
-	addSubcategoryLabel(filtersPage,'Use album as icon whitelist:').set_tooltip_text('If empty, all apps will be used');
-	addEntry(filtersPage,'album-whitelist',undefined,undefined).set_placeholder_text('Separate entries with commas');
+	addSubcategoryLabel(filtersPage,'Use album as icon blacklist:').set_tooltip_text('If empty, all apps will be used');
+	addEntry(filtersPage,'album-blacklist',undefined,undefined).set_placeholder_text('Separate entries with commas');
 
 	let filtersPageSubGrid = buildGrid(shellVersion,settings);
 	if(shellVersion < 40){
@@ -241,14 +241,15 @@ function addStringComboBox(widget,setting,labelstring,options,labeltooltip){
 	return thisComboBox //necessary to reset position when the reset button is clicked
 }
 
-function addSwitch(widget,setting,labelstring,labeltooltip){
+function addSwitch(widget,setting,labelstring,labeltooltip,col){
 	addLabel(widget,labelstring,labeltooltip);
 	let thisSwitch = new Gtk.Switch({
 		valign: Gtk.Align.END,
 		halign: Gtk.Align.END,
 		visible: true
 	});
-	widget.attach(thisSwitch,1,position,1,1);
+	if(col==undefined)col=1
+	widget.attach(thisSwitch,col,position,1,1);
 	widget._settings.bind(setting,thisSwitch,'active',Gio.SettingsBindFlags.DEFAULT);
 	position++;
 	return thisSwitch
