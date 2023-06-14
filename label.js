@@ -1,19 +1,19 @@
 const ExtensionUtils = imports.misc.extensionUtils;
 const CurrentExtension = ExtensionUtils.getCurrentExtension();
 
-let MAX_STRING_LENGTH,BUTTON_PLACEHOLDER,LABEL_FILTERED_LIST,
-	DIVIDER_STRING,FIRST_FIELD,SECOND_FIELD,LAST_FIELD
-	MAX_STRING_LENGTH,DIVIDER_STRING;
+let MAX_STRING_LENGTH,BUTTON_PLACEHOLDER,
+	DIVIDER_STRING,REMOVE_TEXT_WHEN_PAUSED,
+	REMOVE_TEXT_PAUSED_DELAY, LABEL_FORMAT, 
+	LABEL_FILTERED_LIST
 
 function getSettings(){
 	const settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.mpris-label');
 	MAX_STRING_LENGTH = settings.get_int('max-string-length');
 	BUTTON_PLACEHOLDER = settings.get_string('button-placeholder');
+	REMOVE_TEXT_WHEN_PAUSED = settings.get_boolean('remove-text-when-paused');
+	REMOVE_TEXT_PAUSED_DELAY = settings.get_int('remove-text-paused-delay');
+	LABEL_FORMAT = settings.get_string("label-format");
 	LABEL_FILTERED_LIST = settings.get_string('label-filtered-list');
-	DIVIDER_STRING = settings.get_string('divider-string');
-	FIRST_FIELD = settings.get_string('first-field');
-	SECOND_FIELD = settings.get_string('second-field');
-	LAST_FIELD = settings.get_string('last-field');
 }
 
 var buildLabel = function buildLabel(players){
@@ -35,22 +35,56 @@ var buildLabel = function buildLabel(players){
 	if(metadata == null)
 		return placeholder
 
-	let fields = [FIRST_FIELD,SECOND_FIELD,LAST_FIELD]; //order is user-defined
-	fields.filter(field => field != ""); //discard fields that the user defined as empty(none)
+	const substitutions = new Map();
+	substitutions.set("ARTIST", parseMetadataField(players.selected.stringFromMetadata("xesam:artist",metadata)));
+	substitutions.set("ALBUM", parseMetadataField(players.selected.stringFromMetadata("xesam:album",metadata)));
+	substitutions.set("TITLE", parseMetadataField(players.selected.stringFromMetadata("xesam:title",metadata)));
+	substitutions.set("IDENTITY", players.selected.identity);
+	substitutions.set("STATUS", players.selected.playbackStatus);
 
-	let labelstring = "";
-	fields.forEach(field => {
-		let fieldString = players.selected.stringFromMetadata(field,metadata); //"extract" the string from metadata
-		fieldString = parseMetadataField(fieldString); //check, filter, customize and add divider to the extracted string
-		labelstring += fieldString; //add it to the string to be displayed
+	let labelString = LABEL_FORMAT;
+
+	let hasSubstitutions = false
+
+	substitutions.forEach( (value,key) => {
+		// To be used later to see if there are any successful substitutions for any keyword
+		if(labelString.includes(key) && value.length>0) hasSubstitutions = true
+		labelString = labelString.replaceAll(`%${key}%`,value)
 	});
 
-	labelstring = labelstring.substring(0,labelstring.length - DIVIDER_STRING.length); //remove the trailing divider
+	// FORMAT: {{string}}{{replacement vales}}
+	// Regex allows for escape characters: \{ and \}
+	const setRegex = /(\{\{.{1,}?\}\}){2}/g
+	
+	// Find sets in string
+	const sets = labelString.match(setRegex)
+	if(sets)
+		sets.forEach((substring)=>{
+			// Keep original for later, and split the set
+			const original = substring
+			substring = substring.slice(2,-2).split("}}{{")
+			
+			// Find the substitution keys, and replace them in the string
+			let substitutionKeys = substring[1].split(/\|/g)
+			for(let i = 0; i < substitutionKeys.length; i++){
+				const key = substitutionKeys[i]
+				const substitution = substitutions.get(key)
+				if(substitution && substitution.length > 0){
+					substring[0] = substring[0].replace('VALUE',substitution)
+					break;
+				// If reached end of string, and there are no values OR There are no substitutions, and we are using the any keyword, set to empty string
+				}  else if ((i==substitutionKeys.length-1&&key!='EMPTY'&&key!='ANY')|| (key=='ANY' && !hasSubstitutions)){
+					substring[0] = ''
+					break;
+				}
+			}
+			labelString = labelString.replace(original, substring[0])
+		})
 
-	if(labelstring.length === 0)
+	if (labelString.length === 0)
 		return placeholder
 
-	return labelstring
+	return labelString.replaceAll('\\{','{').replaceAll('\\}','}')
 }
 
 function parseMetadataField(data) {
@@ -67,14 +101,11 @@ function parseMetadataField(data) {
 	if(LABEL_FILTERED_LIST){
 		const CtrlCharactersRegex = new RegExp(/[.?*+^$[\]\\(){}|-]/, 'gi');
 		const sanitizedInput = LABEL_FILTERED_LIST.replace(CtrlCharactersRegex,"")
-
 		if(sanitizedInput != LABEL_FILTERED_LIST){
 			const settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.mpris-label');
 			settings.set_string('label-filtered-list',sanitizedInput);
 		}
-
 		const filterRegex = new RegExp("(?:-|\\(|\\[).*(?:" + sanitizedInput.replace(",","|") + ").*(?:$|\\)|\\])","gi");
-
 		data = data.replace(filterRegex,"");
 	}
 
@@ -88,7 +119,6 @@ function parseMetadataField(data) {
 		data = data.substring(0, lastIndex) + "...";
 	}
 
-	data += DIVIDER_STRING;
-
 	return data
 }
+
