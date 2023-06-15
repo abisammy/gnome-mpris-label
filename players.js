@@ -288,7 +288,8 @@ const Player = GObject.registerClass({
 			this.albumArt = new St.Icon({
 				gicon: Gio.Icon.new_for_string(url),
 				style_class: 'system-status-icon',
-				icon_size: size
+				icon_size: size,
+				style: "padding: 0px;"
 			})
 		else this.albumArt = null;
 
