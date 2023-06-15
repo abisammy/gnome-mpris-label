@@ -430,7 +430,14 @@ class MprisLabel extends PanelMenu.Button {
 			if(this.player == null || undefined)
 				this.label.set_text("");
 			else
-				this.label.set_text(buildLabel(this.players));
+				{
+					const label = buildLabel(this.players)
+					if(label == false && this.visible) this.hide();
+					else {
+						if(!this.visible) this.show();
+						this.label.set_text(label)
+					}
+				}
 		}
 		catch(err){
 			log("Mpris Label: " + err);
