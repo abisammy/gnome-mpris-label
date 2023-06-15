@@ -71,6 +71,8 @@ class MprisLabel extends PanelMenu.Button {
 		this.settings.connect('changed::show-icon',this._setIcon.bind(this));
 		this.settings.connect('changed::use-album',this._setIcon.bind(this));
 		this.settings.connect('changed::album-size',this._setIcon.bind(this))
+		this.settings.connect('changed::album-blacklist',this._setIcon.bind(this));
+		this.settings.connect('changed::label-format',this._setText.bind(this))
 
 		Main.panel.addToStatusArea('Mpris Label',this,EXTENSION_INDEX,EXTENSION_PLACE);
 
